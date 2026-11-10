@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Eventora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand fw-bold fs-3" href="index.html">Eventora</a>
+        <div>
+            <span class="text-white me-3">Student</span>
+            <a href="login.html" class="btn btn-outline-light btn-sm">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+
+        <aside class="col-md-3 col-lg-2 bg-primary text-white min-vh-100 p-3">
+            <h5 class="mb-4">Student Panel</h5>
+            <a href="student-dashboard.html" class="d-block text-white text-decoration-none p-2">Dashboard</a>
+            <a href="#events" class="d-block text-white text-decoration-none p-2">Browse Events</a>
+            <a href="#registrations" class="d-block text-white text-decoration-none p-2">My Registrations</a>
+            <a href="login.html" class="d-block text-white text-decoration-none p-2">Logout</a>
+        </aside>
+
+        <main class="col-md-9 col-lg-10 p-4">
+
+            <h2 class="fw-bold">Student Dashboard</h2>
+            <p class="text-secondary">Welcome back! Explore what's happening on campus.</p>
+
+            <div class="row g-3 my-3">
+                <div class="col-sm-6 col-lg-4">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <h6 class="text-secondary">Available Events</h6>
+                            <h2 class="text-primary fw-bold">12</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-lg-4">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <h6 class="text-secondary">My Registrations</h6>
+                            <h2 class="text-success fw-bold">04</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-lg-4">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <h6 class="text-secondary">Upcoming Events</h6>
+                            <h2 class="text-warning fw-bold">03</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <section id="events" class="mt-4">
+                <h4 class="fw-bold mb-3">Upcoming Events</h4>
+
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <span class="badge bg-primary">Sports</span>
+                                <h5 class="mt-3">Ludo Competition</h5>
+                                <p class="text-secondary">Join the exciting university Ludo competition.</p>
+                                <p class="mb-1"><strong>Date:</strong> 20 November 2026</p>
+                                <p><strong>Venue:</strong> VC Lawn</p>
+                                <a href="#registrations" class="btn btn-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <span class="badge bg-success">Technology</span>
+                                <h5 class="mt-3">Tech Workshop</h5>
+                                <p class="text-secondary">Learn about modern technology and innovation.</p>
+                                <p class="mb-1"><strong>Date:</strong> 25 November 2026</p>
+                                <p><strong>Venue:</strong> Main Lab</p>
+                                <a href="#registrations" class="btn btn-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <span class="badge bg-warning text-dark">Cultural</span>
+                                <h5 class="mt-3">Cultural Festival</h5>
+                                <p class="text-secondary">Celebrate culture, creativity and talent.</p>
+                                <p class="mb-1"><strong>Date:</strong> 30 November 2026</p>
+                                <p><strong>Venue:</strong> Hailey Ground</p>
+                                <a href="#registrations" class="btn btn-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="registrations" class="mt-5">
+                <h4 class="fw-bold mb-3">My Registrations</h4>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped bg-white">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Event</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Ludo Competition</td>
+                                <td>20 November 2026</td>
+                                <td><span class="badge bg-success">Registered</span></td>
+                            </tr>
+                            <tr>
+                                <td>Tech Workshop</td>
+                                <td>25 November 2026</td>
+                                <td><span class="badge bg-success">Registered</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+</body>
+</html>
