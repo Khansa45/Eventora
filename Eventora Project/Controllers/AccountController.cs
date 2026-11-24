@@ -21,41 +21,83 @@ namespace Eventora_Project.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login() => View();
+        public IActionResult Login(string? role)
+        {
+            SetLoginContext(role);
+            return View();
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(string email, string password, bool rememberMe)
+        public async Task<IActionResult> Login(string email, string password, bool rememberMe, string? role)
         {
-            var result = await _signInManager.PasswordSignInAsync(email, password, rememberMe, lockoutOnFailure: false);
+            SetLoginContext(role);
+            ViewBag.Email = email;
+
+            var result = await _signInManager.PasswordSignInAsync(email, password, rememberMe, lockoutOnFailure: true);
             if (result.Succeeded)
             {
                 var user = await _userManager.FindByEmailAsync(email);
-                var roles = await _userManager.GetRolesAsync(user!);
-                return RedirectByRole(roles.FirstOrDefault() ?? "Student");
+                if (user == null)
+                {
+                    await _signInManager.SignOutAsync();
+                    TempData["Error"] = "We could not complete sign in. Please try again.";
+                    return View();
+                }
+
+                var roles = await _userManager.GetRolesAsync(user);
+                var selectedRole = NormalizeRoleHint(role);
+
+                if (selectedRole != null && !roles.Contains(selectedRole, StringComparer.Ordinal))
+                {
+                    await _signInManager.SignOutAsync();
+                    TempData["Error"] = "These credentials do not match the selected portal.";
+                    return View();
+                }
+
+                return RedirectByRole(selectedRole ?? roles.FirstOrDefault() ?? "Student");
             }
 
-            TempData["Error"] = "Invalid email or password.";
+            TempData["Error"] = result.IsLockedOut
+                ? "Your account is locked. Please try again later."
+                : "Invalid email or password.";
             return View();
         }
 
         [HttpGet]
         public IActionResult Register() => View();
 
+        [HttpGet]
+        public IActionResult AccessDenied() => View();
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(string fullName, string email, string studentId, string role, string password, string confirmPassword)
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            if (password != confirmPassword)
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var fullName = model.FullName.Trim();
+            var email = model.Email.Trim();
+            var studentId = model.StudentId.Trim();
+
+            if (string.IsNullOrWhiteSpace(fullName) ||
+                string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(studentId))
             {
-                TempData["Error"] = "Passwords do not match.";
-                return View();
+                TempData["Error"] = "Full name, email address and student ID are required.";
+                return View(model);
             }
 
-            string selectedRole = string.IsNullOrWhiteSpace(role) ? "Student" : role;
-            if (!await _roleManager.RoleExistsAsync(selectedRole))
+            const string studentRole = "Student";
+            if (!await _roleManager.RoleExistsAsync(studentRole))
             {
-                await _roleManager.CreateAsync(new IdentityRole(selectedRole));
+                var roleResult = await _roleManager.CreateAsync(new IdentityRole(studentRole));
+                if (!roleResult.Succeeded)
+                {
+                    TempData["Error"] = string.Join(", ", roleResult.Errors.Select(e => e.Description));
+                    return View(model);
+                }
             }
 
             var user = new ApplicationUser
@@ -66,16 +108,16 @@ namespace Eventora_Project.Controllers
                 StudentIdNumber = studentId
             };
 
-            var result = await _userManager.CreateAsync(user, password);
+            var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
-                await _userManager.AddToRoleAsync(user, selectedRole);
+                await _userManager.AddToRoleAsync(user, studentRole);
                 await _signInManager.SignInAsync(user, isPersistent: false);
-                return RedirectByRole(selectedRole);
+                return RedirectByRole(studentRole);
             }
 
             TempData["Error"] = string.Join(", ", result.Errors.Select(e => e.Description));
-            return View();
+            return View(model);
         }
 
         [HttpPost]
@@ -85,6 +127,27 @@ namespace Eventora_Project.Controllers
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }
+
+        private void SetLoginContext(string? role)
+        {
+            var normalizedRole = NormalizeRoleHint(role);
+            ViewBag.RoleHint = normalizedRole;
+            ViewBag.RoleLabel = normalizedRole switch
+            {
+                "Admin" => "Admin Portal",
+                "SocietyHead" => "Society Head Portal",
+                "Student" => "Student Portal",
+                _ => "Eventora Account"
+            };
+        }
+
+        private static string? NormalizeRoleHint(string? role) => role switch
+        {
+            "Admin" => "Admin",
+            "SocietyHead" => "SocietyHead",
+            "Student" => "Student",
+            _ => null
+        };
 
         private IActionResult RedirectByRole(string role) => role switch
         {

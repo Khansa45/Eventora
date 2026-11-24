@@ -172,6 +172,9 @@ namespace Eventora_Project.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("nvarchar(120)");
 
+                    b.Property<int>("TotalCapacity")
+                        .HasColumnType("int");
+
                     b.Property<string>("Venue")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -182,7 +185,10 @@ namespace Eventora_Project.Migrations
 
                     b.HasIndex("SocietyHeadId");
 
-                    b.ToTable("Events");
+                    b.ToTable("Events", t =>
+                        {
+                            t.HasCheckConstraint("CK_Events_Capacity", "[AvailableSeats] >= 0 AND [AvailableSeats] <= [TotalCapacity] AND [TotalCapacity] >= 1 AND [TotalCapacity] <= 5000");
+                        });
                 });
 
             modelBuilder.Entity("Eventora_Project.Models.Registration", b =>
@@ -209,9 +215,10 @@ namespace Eventora_Project.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventId");
-
                     b.HasIndex("StudentId");
+
+                    b.HasIndex("EventId", "StudentId")
+                        .IsUnique();
 
                     b.ToTable("Registrations");
                 });

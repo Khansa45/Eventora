@@ -23,6 +23,15 @@ namespace Eventora_Project.Data
                 .HasForeignKey(r => r.EventId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<Registration>()
+                .HasIndex(r => new { r.EventId, r.StudentId })
+                .IsUnique();
+
+            builder.Entity<Event>()
+                .ToTable(table => table.HasCheckConstraint(
+                    "CK_Events_Capacity",
+                    "[AvailableSeats] >= 0 AND [AvailableSeats] <= [TotalCapacity] AND [TotalCapacity] >= 1 AND [TotalCapacity] <= 5000"));
+
             builder.Entity<Category>().HasData(
                 new Category { Id = 1, Name = "Technology" },
                 new Category { Id = 2, Name = "Sports" },

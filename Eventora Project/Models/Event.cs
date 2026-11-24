@@ -21,8 +21,11 @@ namespace Eventora_Project.Models
         [Required]
         public string City { get; set; } = string.Empty;
 
-        [Required, Range(1, 5000)]
+        [Required, Range(0, 5000)]
         public int AvailableSeats { get; set; }
+
+        [Required, Range(1, 5000)]
+        public int TotalCapacity { get; set; }
 
         public string Status { get; set; } = "Pending"; // Pending, Approved, Rejected
 

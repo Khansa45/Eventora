@@ -1,36 +1,30 @@
-﻿using Eventora_Project.Data;
-using Eventora_Project.Models;
+﻿using Eventora_Project.Models;
+using Eventora_Project.Repositories.Interfaces;
+using Eventora_Project.Repositories.Results;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Eventora_Project.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IEventRepository _events;
 
-        public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public AdminController(IEventRepository events)
         {
-            _context = context;
-            _userManager = userManager;
+            _events = events;
         }
 
         // READ: All events & stats
         public async Task<IActionResult> Dashboard()
         {
-            var allEvents = await _context.Events
-                .Include(e => e.Category)
-                .Include(e => e.SocietyHead)
-                .Include(e => e.Registrations)
-                .OrderByDescending(e => e.Id)
-                .ToListAsync();
+            var allEvents = await _events.GetAllForAdminAsync();
 
-            ViewBag.TotalUsers = await _userManager.Users.CountAsync();
-            ViewBag.UsersList = await _userManager.Users.ToListAsync();
+            ViewBag.TotalEvents = allEvents.Count;
+            ViewBag.PendingCount = allEvents.Count(e => e.Status == "Pending");
+            ViewBag.ApprovedCount = allEvents.Count(e => e.Status == "Approved");
+            ViewBag.RejectedCount = allEvents.Count(e => e.Status == "Rejected");
             return View("AdminDashboard", allEvents);
         }
 
@@ -39,13 +33,20 @@ namespace Eventora_Project.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveEvent(int id)
         {
-            var ev = await _context.Events.FindAsync(id);
-            if (ev != null)
+            var result = await _events.UpdateStatusAsync(id, "Pending", "Approved");
+            if (result.Kind == EventStatusUpdateResultKind.NotFound)
             {
-                ev.Status = "Approved";
-                await _context.SaveChangesAsync();
-                TempData["Success"] = $"'{ev.Title}' approved!";
+                TempData["Error"] = "Event not found.";
             }
+            else if (result.Kind == EventStatusUpdateResultKind.Conflict)
+            {
+                TempData["Error"] = $"'{result.Title}' is no longer pending.";
+            }
+            else
+            {
+                TempData["Success"] = $"'{result.Title}' approved!";
+            }
+
             return RedirectToAction(nameof(Dashboard));
         }
 
@@ -54,13 +55,20 @@ namespace Eventora_Project.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RejectEvent(int id)
         {
-            var ev = await _context.Events.FindAsync(id);
-            if (ev != null)
+            var result = await _events.UpdateStatusAsync(id, "Pending", "Rejected");
+            if (result.Kind == EventStatusUpdateResultKind.NotFound)
             {
-                ev.Status = "Rejected";
-                await _context.SaveChangesAsync();
-                TempData["Success"] = $"'{ev.Title}' rejected.";
+                TempData["Error"] = "Event not found.";
             }
+            else if (result.Kind == EventStatusUpdateResultKind.Conflict)
+            {
+                TempData["Error"] = $"'{result.Title}' is no longer pending.";
+            }
+            else
+            {
+                TempData["Success"] = $"'{result.Title}' rejected.";
+            }
+
             return RedirectToAction(nameof(Dashboard));
         }
 
@@ -69,13 +77,16 @@ namespace Eventora_Project.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteEvent(int id)
         {
-            var ev = await _context.Events.Include(e => e.Registrations).FirstOrDefaultAsync(e => e.Id == id);
-            if (ev != null)
+            var result = await _events.DeleteWithRegistrationsAsync(id);
+            if (!result.Deleted)
             {
-                _context.Registrations.RemoveRange(ev.Registrations);
-                _context.Events.Remove(ev);
-                await _context.SaveChangesAsync();
+                TempData["Error"] = "Event not found.";
             }
+            else
+            {
+                TempData["Success"] = $"'{result.Title}' deleted.";
+            }
+
             return RedirectToAction(nameof(Dashboard));
         }
     }
